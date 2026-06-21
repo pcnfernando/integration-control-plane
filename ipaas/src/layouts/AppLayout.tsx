@@ -109,12 +109,11 @@ import {
 import FeaturePreviewModal from '../components/FeaturePreview/FeaturePreviewModal';
 import { useProject, useProjectByHandler, useProjects } from '../hooks/useProjects';
 import { useComponents } from '../hooks/useComponents';
-import { useOrgs } from '../hooks/useOrg';
+import { useOrgs, useSwitchOrgToken } from '../hooks/useOrg';
 import { useBillingOrg } from '../hooks/useBillingOrg';
 import { isSupportedIntegration, GENERIC_SERVICE_TYPES } from '../constants/integrations';
 import { identifyIntegration } from '../utils/identifyIntegration';
 import { useOrgPermissions } from '../hooks/useAuth';
-import { switchOrgToken } from '../auth/tokenManager';
 import { mockNotifications } from '../mock-data/mockNotifications';
 import { useScope, useResource, resourceUrl, broaden, narrow, newProjectUrl, newComponentUrl, hasProject, hasComponent, type Resource } from '../nav';
 import { componentOverviewUrl, loginUrl, orgHomeUrl, privacyPolicyUrl, profileUrl, projectHomeUrl, termsOfUseUrl } from '../paths';
@@ -326,6 +325,7 @@ function AppLayoutInner(): JSX.Element {
   const [orgSearch, setOrgSearch] = useState('');
   const orgSearchRef = useRef<HTMLInputElement>(null);
   const { data: orgsData = [] } = useOrgs();
+  const switchOrgTokenMutation = useSwitchOrgToken();
 
   const { notifications, actions: notifActions, unreadCount, unreadNotifications } = useNotifications({ initialNotifications: [...mockNotifications] });
   const alertNotifications = notifications.filter((n) => n.type === 'warning' || n.type === 'error');
@@ -646,7 +646,8 @@ function AppLayoutInner(): JSX.Element {
                         navigate(orgHomeUrl(o.handle));
                         return;
                       }
-                      switchOrgToken(o.handle)
+                      switchOrgTokenMutation
+                        .mutateAsync(o.handle)
                         .then(() => {
                           if (o.numericId > 0) {
                             window.API_CONFIG.asgardeoOrgNumericId = o.numericId;
