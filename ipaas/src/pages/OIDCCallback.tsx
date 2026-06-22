@@ -21,7 +21,7 @@ import type { JSX } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Alert, Box, CircularProgress, Typography } from '@wso2/oxygen-ui';
 import { useAuth } from '../auth/AuthContext';
-import { validateAndClearOIDCState, getAndClearRedirectUrl } from '../auth/tokenManager';
+import { validateAndClearOIDCState, getAndClearRedirectUrl } from '../auth/oauthState';
 import { useFetchProjectsByOrgId } from '../hooks/useOrg';
 import { useFetchProjects } from '../hooks/useProjects';
 import { loginUrl, projectHomeUrl, projectsRedirectUrl, registerOrgUrl } from '../paths';

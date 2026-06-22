@@ -22,33 +22,6 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
-// Every export of auth/tokenManager.ts except the four documented OAuth CSRF
-// helpers (see src/pages/AGENTS.md "Accepted exception"). Update this list if
-// tokenManager.ts's export surface changes.
-const TOKEN_MANAGER_DATA_ACCESS_EXPORTS = [
-  'setOnAuthFailure',
-  'saveTokens',
-  'getAccessToken',
-  'saveAsgardeoToken',
-  'getAsgardeoToken',
-  'clearAsgardeoToken',
-  'getRefreshToken',
-  'clearTokens',
-  'getOrRefreshAsgardeoToken',
-  'saveOidcAuthMetadata',
-  'clearOidcAuthMetadata',
-  'refreshAccessToken',
-  'authenticatedFetch',
-  'switchOrgToken',
-  'revokeToken',
-  'saveRedirectUrl',
-  'generateAndSaveOIDCState',
-  'generatePKCE',
-  'saveCodeVerifier',
-  'getAndClearCodeVerifier',
-  'getOrgUuidFromToken',
-];
-
 // `group` patterns are matched gitignore-style: a leading `#` starts a comment
 // unless escaped, so the alias must be written as `\#api`, not `#api`.
 const NO_DIRECT_API_PATTERN = {
@@ -105,6 +78,12 @@ export default [
   // direct auth/tokenManager data access — all server state and token data
   // must flow through src/hooks/. See AGENTS.md, src/pages/AGENTS.md,
   // src/components/AGENTS.md.
+  //
+  // No per-file exception for the OAuth CSRF helpers: they live in their own
+  // module, src/auth/oauthState.ts, which this block does not restrict. That
+  // makes the allowed surface an allowlist by construction (oauthState.ts's
+  // exports) rather than a denylist of tokenManager.ts's other exports that
+  // would silently go stale if tokenManager.ts gained a new export.
   {
     files: ['src/pages/**/*.{ts,tsx}', 'src/components/**/*.{ts,tsx}', 'src/layouts/**/*.{ts,tsx}', 'src/contexts/**/*.{ts,tsx}'],
     rules: {
@@ -114,28 +93,7 @@ export default [
           patterns: [
             NO_DIRECT_API_PATTERN,
             NO_LITERAL_PRODUCT_FOLDER_PATTERN,
-            { group: ['**/auth/tokenManager'], message: 'auth/tokenManager is raw token/data access — use a hook (useAuth, useOrgUuid, ...) instead. Only the documented OAuth CSRF helpers may bypass this (src/pages/AGENTS.md) — add a file-scoped override below if you add one.' },
-          ],
-        },
-      ],
-    },
-  },
-  // Narrow, named exception: the three pages documented in src/pages/AGENTS.md
-  // that import the OAuth CSRF state helpers (pure localStorage utilities, no
-  // network call) directly. Still blocked from every other tokenManager export.
-  {
-    files: ['src/pages/OIDCCallback.tsx', 'src/pages/Project.tsx', 'src/pages/CreateIntegrationOptions.tsx'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [NO_DIRECT_API_PATTERN, NO_LITERAL_PRODUCT_FOLDER_PATTERN],
-          paths: [
-            {
-              name: '../auth/tokenManager',
-              importNames: TOKEN_MANAGER_DATA_ACCESS_EXPORTS,
-              message: 'Only the OAuth CSRF helpers (generateAndSaveGitHubState, validateAndClearGitHubState, validateAndClearOIDCState, getAndClearRedirectUrl) may be imported directly here — everything else must go through a hook. See src/pages/AGENTS.md.',
-            },
+            { group: ['**/auth/tokenManager'], message: 'auth/tokenManager is raw token/data access — use a hook (useAuth, useOrgUuid, ...) instead. The OAuth CSRF helpers are in the separate src/auth/oauthState module (see src/pages/AGENTS.md), which is not restricted.' },
           ],
         },
       ],
