@@ -56,6 +56,16 @@ const NO_DIRECT_API_PATTERN = {
   message: 'UI code must not import api/ directly — call a hook from src/hooks/ instead. See AGENTS.md (the four-layer architecture).',
 };
 
+// Flat config does not merge `no-restricted-imports` option objects across
+// matching blocks — the last matching block's value wins outright. Every
+// block below that sets this rule must therefore repeat this pattern, or
+// files it covers would silently lose the "never a literal product folder"
+// restriction set by the repo-wide block.
+const NO_LITERAL_PRODUCT_FOLDER_PATTERN = {
+  group: ['**/api/wip/*', '**/api/cloud/*', '**/api/icp/*'],
+  message: "Import product API functions via the '#api/<domain>' alias, never a literal product folder — see AGENTS.md.",
+};
+
 export default [
   { ignores: ['dist', 'playwright-report', 'test-results'] },
   js.configs.recommended,
@@ -86,7 +96,7 @@ export default [
       'no-restricted-imports': [
         'error',
         {
-          patterns: [{ group: ['**/api/wip/*', '**/api/cloud/*', '**/api/icp/*'], message: "Import product API functions via the '#api/<domain>' alias, never a literal product folder — see AGENTS.md." }],
+          patterns: [NO_LITERAL_PRODUCT_FOLDER_PATTERN],
         },
       ],
     },
@@ -103,6 +113,7 @@ export default [
         {
           patterns: [
             NO_DIRECT_API_PATTERN,
+            NO_LITERAL_PRODUCT_FOLDER_PATTERN,
             { group: ['**/auth/tokenManager'], message: 'auth/tokenManager is raw token/data access — use a hook (useAuth, useOrgUuid, ...) instead. Only the documented OAuth CSRF helpers may bypass this (src/pages/AGENTS.md) — add a file-scoped override below if you add one.' },
           ],
         },
@@ -118,7 +129,7 @@ export default [
       'no-restricted-imports': [
         'error',
         {
-          patterns: [NO_DIRECT_API_PATTERN],
+          patterns: [NO_DIRECT_API_PATTERN, NO_LITERAL_PRODUCT_FOLDER_PATTERN],
           paths: [
             {
               name: '../auth/tokenManager',
